@@ -45,7 +45,6 @@ namespace sf {
 			char* char_stream = nullptr;							//! engine字节流
 
 			std::vector<void*> gpu_buffers;
-			//void* gpu_buffers[5] = { NULL, NULL ,NULL ,NULL,NULL };
 
 			std::vector<IStates> _trtstates;						//! 错误信息对象
 			nvLogger _nvlog;

@@ -13,7 +13,6 @@
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-	//ImguiModule* imguimodule = &ImguiModule::Get();
 	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
 		return TRUE;
 	switch (msg) {
@@ -235,15 +234,18 @@ void imguiUi::Rendering() {
 
 	ImGui::SliderFloat(u8"置信度", &_parame->conf, 0.01f, 1.0f);
 	ISliderFloat(u8"位置", &_parame->location, 0.f, 1.f);
-	ImGui::SetNextItemWidth(60);
+	ImGui::SetNextItemWidth(25);
 	IInputScalar(u8"最大像素距离", &_parame->max_pixels);
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(25);
+	IInputScalar(u8"最小忽略距离", &_parame->min_pixels);
 
 	if (!_parame->ai_is_run) {
-		ImGui::RadioButton(u8"YOLOV5/7", &_parame->yolo_type, 0);
+		ImGui::RadioButton(u8"YOLO_V5/7", &_parame->yolo_type, 0);
 		ImGui::SameLine();
-		ImGui::RadioButton(u8"YOLOV8", &_parame->yolo_type, 1);
+		ImGui::RadioButton(u8"YOLO_V8", &_parame->yolo_type, 1);
 		ImGui::SameLine();
-		ImGui::RadioButton(u8"YOLOX", &_parame->yolo_type, 2);
+		ImGui::RadioButton(u8"YOLO_X", &_parame->yolo_type, 2);
 
 		ImGui::RadioButton(u8"TRT", &_parame->backend, 0);
 		ImGui::SameLine();

@@ -7,8 +7,7 @@ struct Algorithm {
 	VOID PidControl(float*, float, float, float);
 	VOID HFOVControl(float*, const int&, const int&);
 	VOID VFOVControl(float*,  const int&, const int&);
-	VOID MaxMovePixel(float*, const int&);
-	VOID MinMovePixel(float*, const int&);
+	VOID MovePixel(float*, const int& ,const int&);
 
 private:
 	float deviation = 0;

@@ -82,11 +82,13 @@ public:
 	}
 
 	//! 验证维度是否正确
-	virtual bool dims_error(int64_t dim1, int64_t dim2) {
-		return dim1 > dim2 ? false : true ;	// 默认是yolov5 和yolox的,yolov8需要重写
-	}
+    virtual bool dimensionsMatch(int64_t dim1, int64_t dim2) {
+        // 默认情况下，如果维度不匹配，则返回 false
+        return dim1 <= dim2;
+    }
 
-	//! 验证配置表的完整性
+
+    //! 验证配置表的完整性
 	//! 检查成员指针是否有效
 	//! 极为重要!!!
 	virtual int verifyIntegrity() {

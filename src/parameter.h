@@ -33,6 +33,7 @@ struct Parameter {
 	float location = 0.75;				// 偏移
 	int effectiverange = 200;			// 自瞄有效范围
 	int max_pixels = 15;				// 限制移动距离
+    int min_pixels = 2;                  // 最小忽略距离
 	int class_number = 1;				// 类别数量
 	int max_range = 640;			// 最大范围
 

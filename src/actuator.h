@@ -41,7 +41,7 @@ public:
 		return	new actuatorFactory();
 	}
 
-	IStates QueryInterface(void** actuator);
+	IStates QueryInterface(void** actuator) override;
 
 	IStates AcquireParamePtr(Parameter* parame);
 

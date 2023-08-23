@@ -17,7 +17,7 @@ static std::wstring convertU8andGetWstr(const char* onnx_path) {
 	return	String2WString(StringToUTF8(onnx_path));
 }
 
-void sf::dml::IDML::markError(char* info, State sta) {
+void sf::dml::IDML::markError(const char* info, State sta) {
 	MESSAGEBOXA(info, MB_OK);
 	_dmlstates.push_back(IStates(sta, info));
 }
@@ -83,8 +83,8 @@ bool sf::dml::IDML::parseInput() {
 		}
 
 		if (temp[2] != temp[3]) {
-			LOGWARN("不支持输入(image size)不对称的模型");
-			markError("不支持输入(image size)不对称的模型", State::DimsNotEqual);
+			LOGWARN("不支持输入不对称的模型");
+			markError("模型尺寸大小必须一致", State::DimsNotEqual);
 			return false;
 		}
 
@@ -103,63 +103,63 @@ bool sf::dml::IDML::parseInput() {
 	return false;
 }
 
+// 解析模型输出，获取维度信息
 bool sf::dml::IDML::parseOutput() {
+    size_t shape_size = 0;    // 输出维度的数量
+    size_t num_output_nodes = 0;  // 输出节点的数量
+    char* output_names_temp = nullptr;  // 输出节点的名称
+    OrtTypeInfo* output_typeinfo = nullptr;  // 输出类型信息
+    const OrtTensorTypeAndShapeInfo* output_tensor_info = nullptr;  // 输出 tensor 信息
 
-	size_t shape_size = 0;    //维度
-	size_t num_output_nodes = 0;
-	char* output_names_temp = nullptr;
-	OrtTypeInfo* output_typeinfo = nullptr;     // 输出信息
-	const OrtTensorTypeAndShapeInfo* output_tensor_info = nullptr;   // tensor信息
+    CHECKORT(_ort->SessionGetOutputCount(_session, &num_output_nodes), __LINE__); // 获取输出节点数量
 
+    for (size_t i = 0; i < num_output_nodes; i++) {
+        // 获取输出节点名称
+        CHECKORT(_ort->SessionGetOutputName(_session, i, _allocator, &output_names_temp), __LINE__);
 
-	CHECKORT(_ort->SessionGetOutputCount(_session, &num_output_nodes), __LINE__);	// 输出层数量
+        // 检查是否是需要的输出节点
+        if (strcmp(*(_yolo->getOutputName()), output_names_temp) != 0) {
+            continue;
+        }
 
-	for (size_t i = 0; i < num_output_nodes; i++) {
-		// 获取输出名
-		CHECKORT(_ort->SessionGetOutputName(_session, i, _allocator, &output_names_temp), __LINE__);
-		if (strcmp(*(_yolo->getOutputName()), output_names_temp)) {		// strcmp  0:相等
-			continue;
-		}
+        CHECKORT(_ort->SessionGetOutputTypeInfo(_session, i, &output_typeinfo), __LINE__);  // 获取输出类型信息
+        CHECKORT(_ort->CastTypeInfoToTensorInfo(output_typeinfo, &output_tensor_info), __LINE__);  // 获取输出 tensor 信息
 
-		CHECKORT(_ort->SessionGetOutputTypeInfo(_session, i, &output_typeinfo), __LINE__);	 // 获取第i个输出的信息
-		CHECKORT(_ort->CastTypeInfoToTensorInfo(output_typeinfo, &output_tensor_info), __LINE__);				 // 获取输出tensor信息
+        CHECKORT(_ort->GetDimensionsCount(output_tensor_info, &shape_size), __LINE__); // 获取维度数量
 
-		CHECKORT(_ort->GetDimensionsCount(output_tensor_info, &shape_size), __LINE__);
+        std::vector<int64_t> temp;
+        temp.resize(shape_size);  // 调整容器大小
 
-		std::vector<int64_t> temp;
-		temp.resize(shape_size);        //容器大小
-		std::cout << "维度shape：" << shape_size << std::endl;
-		CHECKORT(_ort->GetDimensions(output_tensor_info, temp.data(), shape_size), __LINE__);
+        std::cout << "维度shape：" << shape_size << std::endl;
+        CHECKORT(_ort->GetDimensions(output_tensor_info, temp.data(), shape_size), __LINE__); // 获取维度信息
 
-		if (temp.empty()) {
-			LOGWARN("获取输出数据失败");
-			return false;
-		}
+        if (temp.empty()) {
+            LOGWARN("获取输出数据失败");
+            return false;
+        }
 
-		for (size_t i = 0; i < shape_size; i++) {
-			std::cout << "维度:" << temp[i] << std::endl;
-		}
+        for (size_t i = 0; i < shape_size; i++) {
+            std::cout << "维度:" << temp[i] << std::endl;
+        }
 
-		// 检查
-		if (_yolo->dims_error(temp[1], temp[2])) {
-			LOGWARN("输出shape和框架不匹配.Shape is [ {} {} {} ] ", tostr(temp[0]), tostr(temp[1]), tostr(temp[2]));
-			markError("模型和框架不匹配", State::FrameNotMatch);
-			return false;
-		}
+        // 检查维度是否匹配
+        if (_yolo->dims_error(temp[1], temp[2])) {
+            LOGWARN("输出shape和框架不匹配. Shape is [ {} {} {} ]", tostr(temp[0]), tostr(temp[1]), tostr(temp[2]));
+            markError("模型和框架不匹配", State::FrameNotMatch);
+            return false;
+        }
+        // 初始化输出维度
+        _yolo->setOutputDims(temp);
+        LOGINFO("获取输出Done. Shape is [ {} {} {} ]", tostr(temp[0]), tostr(temp[1]), tostr(temp[2]));
+        return true;
+    }
 
-		// 为配置表初始化输出维度
-		_yolo->setOutputDims(temp);
-
-
-
-		LOGINFO("获取输出Done. Shape is [ {} {} {} ] ", tostr(temp[0]), tostr(temp[1]), tostr(temp[2]));
-		return true;
-	}
-	std::cout << "找不到节点: " << *_yolo->getOutputName() << std::endl;
-	LOGWARN("获取输出节点失败，请确保模型输出名为output");
-	// 未找到
-	return false;
+    // 如果找不到需要的输出节点
+    std::cout << "找不到节点: " << *_yolo->getOutputName() << std::endl;
+    LOGWARN("获取输出节点失败，请确保模型输出名为output");
+    return false;
 }
+
 
 bool sf::dml::IDML::parseModelInfo() {
 

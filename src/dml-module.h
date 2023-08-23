@@ -60,7 +60,7 @@ namespace sf {
 			bool parseOutput();
 			bool parseModelInfo();
 			bool InitInterface(const wchar_t* onn_path);
-			void markError(char* info, State sta);
+			void markError(const char* info, State sta);
 
 
 		public:

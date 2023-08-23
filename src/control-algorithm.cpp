@@ -24,17 +24,14 @@ VOID Algorithm::VFOVControl(float* input, const int& pixel, const int& worh) {
 }
 
 
-VOID Algorithm::MaxMovePixel(float* input, const int& max) {
-	if (max != 0 && abs(*input) > max) {
-		if (*input > 0)
-			*input = (max);
-		if (*input < 0)
-			*input = (-max);
-	}
+VOID Algorithm::MovePixel(float *input, const int &max, const int &min) {
+    if (min != 0 && abs(*input) <= min) {
+        *input = 0;
+    } else if (max != 0 && abs(*input) > max) {
+        if (*input > 0)
+            *input = (max);
+        if (*input < 0)
+            *input = (-max);
+    }
 }
 
-VOID Algorithm::MinMovePixel(float* input, const int& min) {
-	if (min != 0 && abs(*input) < min) {
-		*input = 0;
-	}
-}

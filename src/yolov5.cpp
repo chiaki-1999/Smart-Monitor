@@ -19,11 +19,11 @@ void sf::Pattern::YOLOV5::DecodeOutput(float* output, cv::Mat& img) {
 		if (confidence <= *_conf) continue;
 
 		float max_class_scores = 0;
-		int classidx = 0;
+		int class_idx = 0;
 		for (size_t i = 0; i < class_num; ++i) {
 			if (max_class_scores < output[index + (5 + i)]) {
 				max_class_scores = output[index + (5 + i)];
-				classidx = i;
+                class_idx = i;
 			}
 		}
 		cv::Rect temp;
@@ -32,7 +32,7 @@ void sf::Pattern::YOLOV5::DecodeOutput(float* output, cv::Mat& img) {
 		temp.width = ((float*)output)[index + 2];
 		temp.height = ((float*)output)[index + 3];
 		_process->_boxes.push_back(temp);
-		_process->_classes.push_back(classidx);
+		_process->_classes.push_back(class_idx);
 		_process->_confidences.push_back(confidence);
 	}
 
